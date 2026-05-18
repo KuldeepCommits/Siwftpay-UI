@@ -1,4 +1,6 @@
 import React from 'react'
+//Ye ek reusable white box hai — title, action button, aur andar ka content props se aata hai 
+// — poore app mein yahi card use hota hai taaki style consistent rahe.
 
 export default function Card({ children, className = '', title, action }) {
   return (

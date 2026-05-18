@@ -5,6 +5,7 @@ import { beneficiariesAPI } from '../../api/beneficiaries'
 import Layout from '../../components/layout/Layout'
 import Card from '../../components/common/Card'
 import Modal from '../../components/common/Modal'
+import ConfirmModal from '../../components/common/ConfirmModal'
 import StatusBadge from '../../components/common/StatusBadge'
 import Loader from '../../components/common/Loader'
 import toast from 'react-hot-toast'
@@ -23,6 +24,9 @@ export default function Beneficiaries() {
   const [editItem, setEditItem] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
+  const [confirmModal, setConfirmModal] = useState({ open: false, title: '', message: '', onConfirm: null })
+  const openConfirm = (title, message, onConfirm) => setConfirmModal({ open: true, title, message, onConfirm })
+  const closeConfirm = () => setConfirmModal((m) => ({ ...m, open: false }))
 
   const hasProfile = !!customerProfile?.customerId
 
@@ -96,15 +100,17 @@ export default function Beneficiaries() {
     }
   }
 
-  const handleDelete = async (id) => {
-    if (!confirm('Remove this beneficiary?')) return
-    try {
-      await beneficiariesAPI.delete(id)
-      toast.success('Beneficiary removed')
-      load()
-    } catch {
-      toast.error('Failed to remove')
-    }
+  const handleDelete = (id) => {
+    openConfirm('Remove Beneficiary', 'This beneficiary will be removed from your account.', async () => {
+      closeConfirm()
+      try {
+        await beneficiariesAPI.delete(id)
+        toast.success('Beneficiary removed')
+        load()
+      } catch {
+        toast.error('Failed to remove')
+      }
+    })
   }
 
   const modeIcon = { Account: Building, CashPickup: User, MobileWallet: Phone }
@@ -250,6 +256,9 @@ export default function Beneficiaries() {
           </div>
         </form>
       </Modal>
+
+      <ConfirmModal open={confirmModal.open} onClose={closeConfirm} onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title} message={confirmModal.message} confirmLabel="Remove" confirmClass="btn-danger" />
     </Layout>
   )
 }

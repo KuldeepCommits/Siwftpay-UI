@@ -119,7 +119,7 @@ export default function Register() {
                   <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
                     type="tel" name="phone" required
-                    value={form.phone} onChange={handleChange}
+                    value={form.phone} minLength={10} maxLength={10} onChange={handleChange}
                     className="form-input pl-10" placeholder="+91 9876543210" />
                 </div>
               </div>

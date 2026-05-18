@@ -13,6 +13,8 @@ const AuthContext = createContext(null)
 //   Login:  { Token, User: { UserId, Name, Email, Phone, Roles:[{RoleType:"Admin"}] } }
 //   Others: the DTO object directly
 
+
+// Backend se jo user aata hai uska role nikalo.
 function extractRoleString(rawUser) {
   // Roles is [{UserRoleId, RoleId, RoleType:"Admin", IsActive, CreatedAt}, ...]
   const roles = rawUser?.Roles ?? rawUser?.roles ?? []
@@ -21,7 +23,7 @@ function extractRoleString(rawUser) {
   }
   return rawUser?.Role ?? rawUser?.role ?? null
 }
-
+//Backend PascalCase bhejta hai, hum camelCase mein convert karte hain.
 function normalizeUser(raw) {
   if (!raw) return null
   const roleStr = extractRoleString(raw)
@@ -36,13 +38,13 @@ function normalizeUser(raw) {
   }
 }
 // ─────────────────────────────────────────────────────────────────────────────
-
+//Localstorage check kaar rha hai ki user data hai ya nahi, agar hai to usse parse karke return kar do, warna null return karo.
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('swiftpay_user') || 'null') }
+    try { return JSON.parse(localStorage.getItem('swiftpay_user') || 'null') } 
     catch { return null }
   })
-  const [token, setToken]             = useState(() => localStorage.getItem('swiftpay_token'))
+  const [token, setToken] = useState(() => localStorage.getItem('swiftpay_token'))
   const [customerProfile, setCustomerProfile] = useState(null)
   const [kyc, setKyc] = useState(null)
   const [loading, setLoading]         = useState(false)
@@ -119,6 +121,13 @@ export function AuthProvider({ children }) {
     }
   }, [user?.userId, role, refreshCustomerProfile, refreshKyc])
 
+  // 1. Backend ko Email + Password bhejo
+  // 2. Token + User wapas aaya
+  // 3. User normalize karo (PascalCase → camelCase)
+  // 4. localStorage mein save karo (refresh pe kaam aayega)
+  // 5. State update karo
+  // 6. { success: true } return karo component ko
+  
   const login = useCallback(async (email, password) => {
     setLoading(true)
     try {

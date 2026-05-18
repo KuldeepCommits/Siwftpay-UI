@@ -7,6 +7,11 @@ import Table from '../../components/common/Table'
 import Loader from '../../components/common/Loader'
 import { Search, Filter, RefreshCw } from 'lucide-react'
 
+//Page khula-useEffect → load() → auditLogsAPI.getAll()-Backend se saare logs aaye- setLogs([...]) → table mein dikhे
+//Admin search box mein "Create" likha-filtered = logs jo "Create" contain karte hain-Table automatically update — 
+// naya API call nahi- Admin dates select karke Filter dabaya-load(true) → auditLogsAPI.getByDateRange(start, end)
+//-Sirf us range ke logs aaye → table update
+
 export default function AuditLogs() {
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)

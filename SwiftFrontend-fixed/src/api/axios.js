@@ -11,10 +11,13 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('swiftpay_token')
-    if (token) config.headers.Authorization = `Bearer ${token}`
+    if (token) config.headers.Authorization = `Bearer ${token}`    //agar token hai to usse Authorization header
+    //  me Bearer token dal dena hai. isse backend ko pata chalega ki user authenticated hai.
+    
+    // agar request koi file  ha to usma content type set na krne ka reason ye hai ki browser khud content type
+    //  set kr dega multipart/form-data ke sath sahi boundary ke sath. agar hum content type khud set karenge 
+    // to boundary missing ho jayega aur server body ko parse nahi kar payega.
 
-    // FormData uploads: let the browser set multipart/form-data with the correct boundary.
-    // If we set Content-Type ourselves the boundary is missing and the server can't parse the body.
     if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
       delete config.headers['Content-Type']
       delete config.headers['content-type']

@@ -6,6 +6,7 @@ import Layout from '../../components/layout/Layout'
 import Card from '../../components/common/Card'
 import Table from '../../components/common/Table'
 import Modal from '../../components/common/Modal'
+import ConfirmModal from '../../components/common/ConfirmModal'
 import StatusBadge from '../../components/common/StatusBadge'
 import Loader from '../../components/common/Loader'
 import toast from 'react-hot-toast'
@@ -48,6 +49,9 @@ export default function PayoutInstructionsPage() {
   const [form, setForm]                       = useState(EMPTY_FORM)
   const [selectedRemit, setSelectedRemit]     = useState(null)
   const [saving, setSaving]                   = useState(false)
+  const [confirmModal, setConfirmModal] = useState({ open: false, title: '', message: '', onConfirm: null })
+  const openConfirm = (title, message, onConfirm) => setConfirmModal({ open: true, title, message, onConfirm })
+  const closeConfirm = () => setConfirmModal((m) => ({ ...m, open: false }))
 
   const load = async () => {
     setLoading(true)
@@ -157,13 +161,15 @@ export default function PayoutInstructionsPage() {
     }
   }
 
-  const handleDelete = async (id) => {
-    if (!confirm('Delete this payout instruction?')) return
-    try {
-      await payoutInstructionsAPI.delete(id)
-      toast.success('Deleted')
-      load()
-    } catch { toast.error('Failed to delete') }
+  const handleDelete = (id) => {
+    openConfirm('Delete Payout Instruction', 'This payout instruction will be permanently deleted.', async () => {
+      closeConfirm()
+      try {
+        await payoutInstructionsAPI.delete(id)
+        toast.success('Deleted')
+        load()
+      } catch { toast.error('Failed to delete') }
+    })
   }
 
   const stats = STATUS_VALUES.map((s) => ({
@@ -432,6 +438,9 @@ export default function PayoutInstructionsPage() {
           )
         })()}
       </Modal>
+
+      <ConfirmModal open={confirmModal.open} onClose={closeConfirm} onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title} message={confirmModal.message} confirmLabel="Delete" confirmClass="btn-danger" />
     </Layout>
   )
 }

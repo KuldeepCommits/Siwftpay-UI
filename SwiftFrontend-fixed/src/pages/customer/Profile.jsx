@@ -8,6 +8,7 @@ import Layout from '../../components/layout/Layout'
 import Card from '../../components/common/Card'
 import StatusBadge from '../../components/common/StatusBadge'
 import Loader from '../../components/common/Loader'
+import ConfirmModal from '../../components/common/ConfirmModal'
 import toast from 'react-hot-toast'
 import { KYC_REQUIRED_DOCS, KYC_DOC_LABELS, kycStatusMeta } from '../../utils/kyc'
 import {
@@ -39,6 +40,9 @@ export default function Profile() {
   const [uploadFile, setUploadFile] = useState(null)
   const [uploadNotes, setUploadNotes] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [confirmModal, setConfirmModal] = useState({ open: false, title: '', message: '', onConfirm: null })
+  const openConfirm = (title, message, onConfirm) => setConfirmModal({ open: true, title, message, onConfirm })
+  const closeConfirm = () => setConfirmModal((m) => ({ ...m, open: false }))
   const fileInputRef = React.useRef(null)
   const [viewingDocId, setViewingDocId] = useState(null)
 
@@ -166,15 +170,17 @@ export default function Profile() {
     }
   }
 
-  const handleDeleteDoc = async (id) => {
-    if (!confirm('Remove this document?')) return
-    try {
-      await kycDocumentsAPI.delete(id)
-      toast.success('Document removed')
-      loadDocs()
-    } catch {
-      toast.error('Failed to remove')
-    }
+  const handleDeleteDoc = (id) => {
+    openConfirm('Remove Document', 'This KYC document will be permanently removed.', async () => {
+      closeConfirm()
+      try {
+        await kycDocumentsAPI.delete(id)
+        toast.success('Document removed')
+        loadDocs()
+      } catch {
+        toast.error('Failed to remove')
+      }
+    })
   }
 
   // Submit KYC for review (status flips to Pending — backend default already)
@@ -529,6 +535,9 @@ export default function Profile() {
           </Card>
         )}
       </div>
+
+      <ConfirmModal open={confirmModal.open} onClose={closeConfirm} onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title} message={confirmModal.message} confirmLabel="Remove" confirmClass="btn-danger" />
     </Layout>
   )
 }

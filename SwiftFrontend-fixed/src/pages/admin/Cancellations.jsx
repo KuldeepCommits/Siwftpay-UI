@@ -6,6 +6,7 @@ import Layout from '../../components/layout/Layout'
 import Card from '../../components/common/Card'
 import Table from '../../components/common/Table'
 import Modal from '../../components/common/Modal'
+import ConfirmModal from '../../components/common/ConfirmModal'
 import StatusBadge from '../../components/common/StatusBadge'
 import Loader from '../../components/common/Loader'
 import toast from 'react-hot-toast'
@@ -31,6 +32,9 @@ export default function CancellationsPage() {
   const [createOpen, setCreateOpen] = useState(false)
   const [form, setForm] = useState(EMPTY)
   const [saving, setSaving] = useState(false)
+  const [confirmModal, setConfirmModal] = useState({ open: false, title: '', message: '', onConfirm: null })
+  const openConfirm = (title, message, onConfirm) => setConfirmModal({ open: true, title, message, onConfirm })
+  const closeConfirm = () => setConfirmModal((m) => ({ ...m, open: false }))
 
   const load = async () => {
     setLoading(true)
@@ -70,25 +74,28 @@ export default function CancellationsPage() {
     }
   }
 
-  const handleStatus = async (id, status) => {
-    if (!confirm(`Move cancellation to ${status}?`)) return
-    try {
-      await cancellationsAPI.updateStatus(id, { status })
-      toast.success(`Moved to ${status}`)
-      // Reload so the table and stat cards reflect the updated cancellation + remittance status
-      load()
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed')
-    }
+  const handleStatus = (id, status) => {
+    openConfirm(`Move to ${status}`, `Move this cancellation to ${status}?`, async () => {
+      closeConfirm()
+      try {
+        await cancellationsAPI.updateStatus(id, { status })
+        toast.success(`Moved to ${status}`)
+        load()
+      } catch (err) {
+        toast.error(err.response?.data?.message || 'Failed')
+      }
+    })
   }
 
-  const handleDelete = async (id) => {
-    if (!confirm('Delete this cancellation?')) return
-    try {
-      await cancellationsAPI.delete(id)
-      toast.success('Deleted')
-      load()
-    } catch { toast.error('Failed') }
+  const handleDelete = (id) => {
+    openConfirm('Delete Cancellation', 'This cancellation record will be permanently deleted.', async () => {
+      closeConfirm()
+      try {
+        await cancellationsAPI.delete(id)
+        toast.success('Deleted')
+        load()
+      } catch { toast.error('Failed') }
+    })
   }
 
   const filtered = filter === 'All' ? items : items.filter((c) => c.status === filter)
@@ -190,6 +197,9 @@ export default function CancellationsPage() {
           </div>
         </form>
       </Modal>
+
+      <ConfirmModal open={confirmModal.open} onClose={closeConfirm} onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title} message={confirmModal.message} confirmLabel="Confirm" confirmClass="btn-danger" />
     </Layout>
   )
 }

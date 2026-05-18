@@ -2,6 +2,9 @@ import React, { useState } from 'react'
 import Sidebar from './Sidebar'
 import Navbar from './Navbar'
 
+//Ye file poore app ka frame hai — sidebar left mein, navbar top pe, aur beech mein jo bhi page ho woh children ke zariye
+//  render hota hai —sidebar chhota/bada hone pe content smoothly shift hota hai.
+
 export default function Layout({ children }) {
   const [collapsed, setCollapsed] = useState(false)
 

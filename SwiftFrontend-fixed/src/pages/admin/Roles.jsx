@@ -7,6 +7,7 @@ import Layout from '../../components/layout/Layout'
 import Card from '../../components/common/Card'
 import Table from '../../components/common/Table'
 import Modal from '../../components/common/Modal'
+import ConfirmModal from '../../components/common/ConfirmModal'
 import Loader from '../../components/common/Loader'
 import toast from 'react-hot-toast'
 import { Shield, UserPlus, X } from 'lucide-react'
@@ -29,6 +30,9 @@ export default function AdminRoles() {
   const [assignModal, setAssignModal] = useState(false)
   const [assignForm, setAssignForm] = useState({ userId: '', roleId: '' })
   const [saving, setSaving] = useState(false)
+  const [confirmModal, setConfirmModal] = useState({ open: false, title: '', message: '', onConfirm: null })
+  const openConfirm = (title, message, onConfirm) => setConfirmModal({ open: true, title, message, onConfirm })
+  const closeConfirm = () => setConfirmModal((m) => ({ ...m, open: false }))
 
   const load = async () => {
     setLoading(true)
@@ -68,14 +72,16 @@ export default function AdminRoles() {
   const handleRemove = async (userId, userRoleId, roleType) => {
     if (roleType === 'Admin') { toast.error('Cannot remove the Admin role'); return }
     if (userId === currentUser?.userId) { toast.error('Cannot remove your own role'); return }
-    if (!confirm(`Remove ${roleType} role from this user?`)) return
-    try {
-      await rolesAPI.removeRole(userId, userRoleId)
-      toast.success('Role removed')
-      load()
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed')
-    }
+    openConfirm('Remove Role', `Remove the ${roleType} role from this user?`, async () => {
+      closeConfirm()
+      try {
+        await rolesAPI.removeRole(userId, userRoleId)
+        toast.success('Role removed')
+        load()
+      } catch (err) {
+        toast.error(err.response?.data?.message || 'Failed')
+      }
+    })
   }
 
   // Build user→roles index — u.roles is [{userRoleId, roleId, roleType, ...}] not string[]
@@ -163,6 +169,9 @@ export default function AdminRoles() {
           </div>
         </Card>
       </div>
+
+      <ConfirmModal open={confirmModal.open} onClose={closeConfirm} onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title} message={confirmModal.message} confirmLabel="Remove" confirmClass="btn-danger" />
 
       <Modal open={assignModal} onClose={() => setAssignModal(false)} title="Assign Role to User">
         <form onSubmit={handleAssign} className="space-y-4">

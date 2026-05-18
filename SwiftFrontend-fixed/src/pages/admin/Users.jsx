@@ -6,6 +6,7 @@ import Layout from '../../components/layout/Layout'
 import Card from '../../components/common/Card'
 import Table from '../../components/common/Table'
 import Modal from '../../components/common/Modal'
+import ConfirmModal from '../../components/common/ConfirmModal'
 import StatusBadge from '../../components/common/StatusBadge'
 import Loader from '../../components/common/Loader'
 import toast from 'react-hot-toast'
@@ -25,6 +26,9 @@ export default function AdminUsers() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', status: 'Active' })
   const [staffForm, setStaffForm] = useState({ name: '', email: '', phone: '', password: '', roleId: '' })
   const [saving, setSaving] = useState(false)
+  const [confirmModal, setConfirmModal] = useState({ open: false, title: '', message: '', onConfirm: null })
+  const openConfirm = (title, message, onConfirm) => setConfirmModal({ open: true, title, message, onConfirm })
+  const closeConfirm = () => setConfirmModal((m) => ({ ...m, open: false }))
 
   const load = () => {
     setLoading(true)
@@ -63,12 +67,14 @@ export default function AdminUsers() {
     const isAdmin = roles.some((r) => (r.roleType ?? r.RoleType) === 'Admin')
     if (isAdmin) { toast.error('Cannot deactivate an Admin user'); return }
     if (targetUser.userId === currentUser?.userId) { toast.error('Cannot deactivate your own account'); return }
-    if (!confirm('Deactivate this user?')) return
-    try {
-      await usersAPI.delete(targetUser.userId)
-      toast.success('User deactivated')
-      load()
-    } catch { toast.error('Failed') }
+    openConfirm('Deactivate User', 'Are you sure you want to deactivate this user?', async () => {
+      closeConfirm()
+      try {
+        await usersAPI.delete(targetUser.userId)
+        toast.success('User deactivated')
+        load()
+      } catch { toast.error('Failed') }
+    })
   }
 
   const handleCreateStaff = async (e) => {
@@ -224,6 +230,9 @@ export default function AdminUsers() {
           </div>
         </form>
       </Modal>
+
+      <ConfirmModal open={confirmModal.open} onClose={closeConfirm} onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title} message={confirmModal.message} confirmLabel="Deactivate" confirmClass="btn-danger" />
     </Layout>
   )
 }

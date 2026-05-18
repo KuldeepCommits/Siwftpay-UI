@@ -4,6 +4,7 @@ import Layout from '../../components/layout/Layout'
 import Card from '../../components/common/Card'
 import Table from '../../components/common/Table'
 import Modal from '../../components/common/Modal'
+import ConfirmModal from '../../components/common/ConfirmModal'
 import StatusBadge from '../../components/common/StatusBadge'
 import Loader from '../../components/common/Loader'
 import toast from 'react-hot-toast'
@@ -18,6 +19,9 @@ export default function FeeRulesPage() {
   const [editItem, setEditItem] = useState(null)
   const [form, setForm] = useState(EMPTY_FEE)
   const [saving, setSaving] = useState(false)
+  const [confirmModal, setConfirmModal] = useState({ open: false, title: '', message: '', onConfirm: null })
+  const openConfirm = (title, message, onConfirm) => setConfirmModal({ open: true, title, message, onConfirm })
+  const closeConfirm = () => setConfirmModal((m) => ({ ...m, open: false }))
 
   const load = () => {
     setLoading(true)
@@ -53,13 +57,15 @@ export default function FeeRulesPage() {
     }
   }
 
-  const handleDelete = async (id) => {
-    if (!confirm('Delete this fee rule?')) return
-    try {
-      await feeRulesAPI.delete(id)
-      toast.success('Deleted')
-      load()
-    } catch { toast.error('Failed') }
+  const handleDelete = (id) => {
+    openConfirm('Delete Fee Rule', 'This fee rule will be permanently deleted.', async () => {
+      closeConfirm()
+      try {
+        await feeRulesAPI.delete(id)
+        toast.success('Deleted')
+        load()
+      } catch { toast.error('Failed') }
+    })
   }
 
   const columns = [
@@ -187,6 +193,9 @@ export default function FeeRulesPage() {
           </div>
         </form>
       </Modal>
+
+      <ConfirmModal open={confirmModal.open} onClose={closeConfirm} onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title} message={confirmModal.message} confirmLabel="Delete" confirmClass="btn-danger" />
     </Layout>
   )
 }
